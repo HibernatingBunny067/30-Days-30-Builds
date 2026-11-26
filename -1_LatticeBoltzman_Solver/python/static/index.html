@@ -1,0 +1,294 @@
+<!-- Totally written by Claud, I have no web developement knowledge -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LB Wind Tunnel</title>
+<style>
+  :root {
+    --bg: #0e1014; --panel: #161920; --border: #262b36;
+    --text: #e6e8ee; --muted: #8b93a7; --accent: #5aa9ff; --warn: #ffb454;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 32px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 12px; }
+  h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .stage { position: relative; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #000; }
+  canvas { display: block; width: 100%; cursor: crosshair; touch-action: none; }
+  .status { position: absolute; left: 8px; bottom: 8px; font: 12px ui-monospace, Menlo, monospace;
+            color: #fff; background: rgba(0, 0, 0, .55); padding: 2px 8px; border-radius: 4px; pointer-events: none; }
+  .notice { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #2a2010;
+            color: var(--warn); border: 1px solid #5a4318; padding: 6px 12px; border-radius: 6px;
+            font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 90%; }
+  .notice.show { opacity: 1; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+  .group { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .group h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  button, select { background: #1f2430; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+                   padding: 6px 10px; font: inherit; cursor: pointer; }
+  button:hover, select:hover { border-color: #3a4152; }
+  button.active { border-color: var(--accent); color: var(--accent); }
+  label.slider { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-bottom: 8px; font-size: 13px; }
+  label.slider span:last-of-type { font-variant-numeric: tabular-nums; color: var(--muted); }
+  label.slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+  .error { padding: 40px; text-align: center; color: var(--warn); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Lattice Boltzmann Wind Tunnel</h1>
+    <span class="hint">Drag to draw walls · right-drag or Shift-drag to erase</span>
+  </header>
+
+  <div class="stage">
+    <canvas id="view"></canvas>
+    <div class="status" id="status">connecting…</div>
+    <div class="notice" id="notice"></div>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <h2>Obstacle</h2>
+      <div class="row" id="presets"></div>
+      <label class="slider" style="margin-top:10px"><span>Brush radius</span><span id="brushVal"></span>
+        <input id="brush" type="range" min="1" max="15" step="1" value="3"></label>
+    </div>
+    <div class="group">
+      <h2>Flow</h2>
+      <label class="slider"><span>Inlet speed (lattice units)</span><span id="u0Val"></span>
+        <input id="u0" type="range" min="0.02" max="0.18" step="0.005"></label>
+      <label class="slider"><span>Viscosity</span><span id="viscVal"></span>
+        <input id="visc" type="range" min="0.005" max="0.12" step="0.001"></label>
+    </div>
+    <div class="group">
+      <h2>View &amp; run</h2>
+      <div class="row" style="margin-bottom:10px">
+        <select id="mode"></select>
+        <button id="pause">Pause</button>
+        <button id="reset">Reset flow</button>
+      </div>
+      <label class="slider"><span>Steps per frame</span><span id="spfVal"></span>
+        <input id="spf" type="range" min="1" max="40" step="1"></label>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("view");
+  const gl = canvas.getContext("webgl", { antialias: false, premultipliedAlpha: false });
+  if (!gl) {
+    document.querySelector(".stage").innerHTML = '<div class="error">WebGL is not available in this browser.</div>';
+    return;
+  }
+
+  // ---------------------------------------------------------------- WebGL
+  const VERT = `
+    attribute vec2 a_pos;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = vec2(a_pos.x * 0.5 + 0.5, 0.5 - a_pos.y * 0.5);  // row 0 at the top
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }`;
+  const FRAG = `
+    precision mediump float;
+    uniform sampler2D u_field;  // LUMINANCE = field value, ALPHA = obstacle
+    uniform sampler2D u_lut;    // 256x1 colormap from matplotlib
+    varying vec2 v_uv;
+    void main() {
+      vec4 s = texture2D(u_field, v_uv);
+      vec3 color = texture2D(u_lut, vec2(s.r * (255.0 / 256.0) + 0.5 / 256.0, 0.5)).rgb;
+      vec3 wall = vec3(0.16, 0.17, 0.2);
+      float edge = smoothstep(0.35, 0.65, s.a);
+      gl_FragColor = vec4(mix(color, wall, edge), 1.0);
+    }`;
+
+  function compile(type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+    return sh;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, "a_pos");
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  function makeTexture(unit) {
+    const tex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return tex;
+  }
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  const fieldTex = makeTexture(0);
+  const lutTex = makeTexture(1);
+  gl.uniform1i(gl.getUniformLocation(prog, "u_field"), 0);
+  gl.uniform1i(gl.getUniformLocation(prog, "u_lut"), 1);
+
+  let nx = 0, ny = 0, pendingFrame = null, drawScheduled = false;
+
+  function resize() {
+    if (!nx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    canvas.style.height = (w * ny / nx) + "px";
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(w * ny / nx * dpr);
+    scheduleDraw();
+  }
+  new ResizeObserver(resize).observe(canvas);
+
+  function scheduleDraw() {
+    if (drawScheduled) return;
+    drawScheduled = true;
+    requestAnimationFrame(() => {
+      drawScheduled = false;
+      if (pendingFrame) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE_ALPHA, nx, ny, 0, gl.LUMINANCE_ALPHA, gl.UNSIGNED_BYTE, pendingFrame);
+        pendingFrame = null;
+      }
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    });
+  }
+
+  // ------------------------------------------------------------ WebSocket
+  let ws = null;
+  const send = (msg) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg)); };
+
+  function connect() {
+    ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
+    ws.binaryType = "arraybuffer";
+    ws.onmessage = (e) => {
+      if (typeof e.data !== "string") {
+        if (e.data.byteLength === nx * ny * 2) { pendingFrame = new Uint8Array(e.data); scheduleDraw(); }
+        return;
+      }
+      const msg = JSON.parse(e.data);
+      if (msg.type === "config") applyConfig(msg);
+      else if (msg.type === "stats") showStats(msg);
+      else if (msg.type === "notice") showNotice(msg.text);
+    };
+    ws.onclose = () => { $("status").textContent = "disconnected, retrying…"; setTimeout(connect, 1000); };
+  }
+
+  // ------------------------------------------------------------------- UI
+  let paused = false, lastStats = null;
+
+  function applyConfig(c) {
+    const sizeChanged = c.nx !== nx || c.ny !== ny;
+    nx = c.nx; ny = c.ny;
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, lutTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 256, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array(c.lut));
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fieldTex);
+    if (sizeChanged) resize();
+
+    $("mode").innerHTML = c.modes.map(m => `<option value="${m}">${m[0].toUpperCase() + m.slice(1)}</option>`).join("");
+    $("mode").value = c.mode;
+    $("presets").innerHTML = "";
+    for (const p of c.presets) {
+      const b = document.createElement("button");
+      b.textContent = p === "empty" ? "Clear" : p[0].toUpperCase() + p.slice(1);
+      b.onclick = () => send({ type: "preset", name: p });
+      $("presets").appendChild(b);
+    }
+    setSlider("u0", c.u0); setSlider("visc", c.viscosity); setSlider("spf", c.steps_per_frame);
+    setPaused(c.paused);
+    scheduleDraw();
+  }
+
+  const fmt = { u0: v => (+v).toFixed(3), visc: v => (+v).toFixed(3), spf: v => v, brush: v => v + " cells" };
+  function setSlider(id, v) { $(id).value = v; $(id + "Val").textContent = fmt[id]($(id).value); }
+
+  function bindSlider(id, toMsg) {
+    $(id).addEventListener("input", () => {
+      $(id + "Val").textContent = fmt[id]($(id).value);
+      if (toMsg) send(toMsg(+$(id).value));
+    });
+  }
+  bindSlider("u0", v => ({ type: "set", u0: v }));
+  bindSlider("visc", v => ({ type: "set", viscosity: v }));
+  bindSlider("spf", v => ({ type: "set", steps_per_frame: v }));
+  bindSlider("brush");
+  setSlider("brush", 3);
+
+  $("mode").onchange = () => send({ type: "set", mode: $("mode").value });
+  $("reset").onclick = () => send({ type: "reset" });
+  $("pause").onclick = () => { setPaused(!paused); send({ type: "pause", paused }); };
+  function setPaused(p) { paused = p; $("pause").textContent = p ? "Resume" : "Pause"; $("pause").classList.toggle("active", p); }
+
+  function showStats(s) {
+    $("status").textContent =
+      `Re ≈ ${s.reynolds} · ${s.steps_per_sec} steps/s · ${s.mlups} MLUPS · ${s.fps} fps · step ${s.step}` +
+      (paused ? " · paused" : "");
+  }
+
+  let noticeTimer;
+  function showNotice(text) {
+    $("notice").textContent = text;
+    $("notice").classList.add("show");
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => $("notice").classList.remove("show"), 4000);
+  }
+
+  // -------------------------------------------------------------- drawing
+  let drawing = false, erase = false, last = null;
+
+  function toGrid(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * nx, y: (e.clientY - r.top) / r.height * ny };
+  }
+  function paintTo(p) {
+    const r = +$("brush").value;
+    // Fill in the gaps when the pointer moves quickly.
+    const from = last || p;
+    const dist = Math.hypot(p.x - from.x, p.y - from.y);
+    const n = Math.max(1, Math.ceil(dist / Math.max(0.5, r * 0.5)));
+    for (let i = 1; i <= n; i++) {
+      const t = i / n;
+      send({ type: "draw", x: from.x + (p.x - from.x) * t, y: from.y + (p.y - from.y) * t, r, erase });
+    }
+    last = p;
+  }
+  canvas.addEventListener("contextmenu", e => e.preventDefault());
+  canvas.addEventListener("pointerdown", e => {
+    if (!nx) return;
+    drawing = true; last = null;
+    erase = e.button === 2 || e.shiftKey;
+    canvas.setPointerCapture(e.pointerId);
+    paintTo(toGrid(e));
+  });
+  canvas.addEventListener("pointermove", e => { if (drawing) paintTo(toGrid(e)); });
+  const stop = () => { drawing = false; last = null; };
+  canvas.addEventListener("pointerup", stop);
+  canvas.addEventListener("pointercancel", stop);
+
+  connect();
+})();
+</script>
+</body>
+</html>
