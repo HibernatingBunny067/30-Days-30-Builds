@@ -1,6 +1,6 @@
 # 30 Days, 30 Builds: Design, Simulation & Code
 
-One mechanical engineering build a day for 30 days, from **29 Nov to 28 Dec 2026**, covering machine design, structural FEA, CFD, heat transfer, mechanisms and vibration, and control systems.
+One mechanical engineering build a day for 30 days, from **28 Nov to 27 Dec 2026**, covering machine design, structural FEA, CFD, heat transfer, mechanisms and vibration, and control systems.
 
 Every build follows the same rule: **no result without a check.**
 
@@ -23,61 +23,61 @@ Daily posts on X: **[@harrykesh067](https://x.com/harrykesh067)**
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 01 | 29 Nov | Gearbox output shaft: loads → fatigue sizing → parametric CAD | Python, Fusion | coming |
-| 02 | 30 Nov | Spur gear pair: Lewis bending and AGMA contact stress | Python, Fusion | coming |
-| 03 | 01 Dec | Bearing selection (L10 life) + housing | Python, Fusion | coming |
-| 04 | 02 Dec | Eccentrically loaded bolted bracket + GD&T drawing | Python, Fusion | coming |
-| 05 ⭐ | 03 Dec | Single-stage gear reducer assembly | Fusion | coming |
+| 01 | 28 Nov | Gearbox output shaft: loads → fatigue sizing → parametric CAD | Python, Fusion | coming |
+| 02 | 29 Nov | Spur gear pair: Lewis bending and AGMA contact stress | Python, Fusion | coming |
+| 03 | 30 Nov | Bearing selection (L10 life) + housing | Python, Fusion | coming |
+| 04 | 01 Dec | Eccentrically loaded bolted bracket + GD&T drawing | Python, Fusion | coming |
+| 05 ⭐ | 02 Dec | Single-stage gear reducer assembly | Fusion | coming |
 
 ### Block 2: Structural FEA
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 06 | 04 Dec | Plate with a hole: stress concentration + mesh convergence | Fusion Simulation | coming |
-| 07 | 05 Dec | Shaft shoulder fillet study (Day 1 shaft) | Fusion Simulation | coming |
-| 08 | 06 Dec | Lightweighting a bracket over three FEA iterations | Fusion Simulation | coming |
-| 09 💻 | 07 Dec | My own 2D frame FEM solver | Python, PyNiteFEA | coming |
-| 10 ⭐ | 08 Dec | Column buckling: Euler, Johnson and imperfections | Python, Fusion Simulation | coming |
+| 06 | 03 Dec | Plate with a hole: stress concentration + mesh convergence | Fusion Simulation | coming |
+| 07 | 04 Dec | Shaft shoulder fillet study (Day 1 shaft) | Fusion Simulation | coming |
+| 08 | 05 Dec | Lightweighting a bracket over three FEA iterations | Fusion Simulation | coming |
+| 09 💻 | 06 Dec | My own 2D frame FEM solver | Python, PyNiteFEA | coming |
+| 10 ⭐ | 07 Dec | Column buckling: Euler, Johnson and imperfections | Python, Fusion Simulation | coming |
 
 ### Block 3: CFD & Fluid Numerics
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 11 💻 | 09 Dec | Convection–diffusion: central vs upwind vs QUICK | Python | coming |
-| 12 | 10 Dec | Backward-facing step vs Armaly et al. (1983) | OpenFOAM, ParaView | coming |
-| 13 | 11 Dec | Flow past a cylinder: steady wake and vortex shedding | OpenFOAM, ParaView, Python | coming |
-| 14 💻 | 12 Dec | Pipe network solver: Hardy Cross vs Newton–Raphson | Python | coming |
-| 15 ⭐ | 13 Dec | Orifice plate flow meter vs ISO 5167 | OpenFOAM, ParaView | coming |
+| 11 💻 | 08 Dec | Convection–diffusion: central vs upwind vs QUICK | Python | coming |
+| 12 | 09 Dec | Backward-facing step vs Armaly et al. (1983) | OpenFOAM, ParaView | coming |
+| 13 | 10 Dec | Flow past a cylinder: steady wake and vortex shedding | OpenFOAM, ParaView, Python | coming |
+| 14 💻 | 11 Dec | Pipe network solver: Hardy Cross vs Newton–Raphson | Python | coming |
+| 15 ⭐ | 12 Dec | Orifice plate flow meter vs ISO 5167 | OpenFOAM, ParaView | coming |
 
 ### Block 4: Heat Transfer
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 16 💻 | 14 Dec | 2D transient conduction solver: explicit vs Crank–Nicolson | Python, Fusion Thermal | coming |
-| 17 | 15 Dec | Heat sink fin design | Python, Fusion Thermal | coming |
-| 18 | 16 Dec | Natural convection on a heated vertical plate | OpenFOAM, ParaView | coming |
-| 19 💻 | 17 Dec | Double-pipe heat exchanger: LMTD, NTU and a 1D marching model | Python | coming |
-| 20 ⭐ | 18 Dec | Shrink fit: Lamé vs thermal + structural FEA | Python, Fusion Simulation | coming |
+| 16 💻 | 13 Dec | 2D transient conduction solver: explicit vs Crank–Nicolson | Python, Fusion Thermal | coming |
+| 17 | 14 Dec | Heat sink fin design | Python, Fusion Thermal | coming |
+| 18 | 15 Dec | Natural convection on a heated vertical plate | OpenFOAM, ParaView | coming |
+| 19 💻 | 16 Dec | Double-pipe heat exchanger: LMTD, NTU and a 1D marching model | Python | coming |
+| 20 ⭐ | 17 Dec | Shrink fit: Lamé vs thermal + structural FEA | Python, Fusion Simulation | coming |
 
 ### Block 5: Mechanisms & Vibration
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 21 💻 | 19 Dec | Windshield wiper four-bar: synthesis and Newton–Raphson position solver | Python, Fusion | coming |
-| 22 | 20 Dec | Slider-crank + flywheel sizing | Python, Fusion | coming |
-| 23 | 21 Dec | Cam profile design with cycloidal motion | Python, Fusion | coming |
-| 24 💻 | 22 Dec | Torsional vibration of the Day 5 gearbox | Python | coming |
-| 25 ⭐ | 23 Dec | Keeping a motor bracket out of resonance | Python, Fusion Simulation | coming |
+| 21 💻 | 18 Dec | Windshield wiper four-bar: synthesis and Newton–Raphson position solver | Python, Fusion | coming |
+| 22 | 19 Dec | Slider-crank + flywheel sizing | Python, Fusion | coming |
+| 23 | 20 Dec | Cam profile design with cycloidal motion | Python, Fusion | coming |
+| 24 💻 | 21 Dec | Torsional vibration of the Day 5 gearbox | Python | coming |
+| 25 ⭐ | 22 Dec | Keeping a motor bracket out of resonance | Python, Fusion Simulation | coming |
 
 ### Block 6: Control Systems
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 26 💻 | 24 Dec | DC motor speed control: PID, saturation and anti-windup | Python (python-control) | coming |
-| 27 💻 | 25 Dec | Lead–lag servo design and discretisation | Python (python-control) | coming |
-| 28 💻 | 26 Dec | Active suspension with LQR on a quarter-car | Python (python-control, SciPy) | coming |
-| 29 💻 | 27 Dec | Temperature control of a heated block | Python | coming |
-| 30 ⭐ | 28 Dec | Capstone: motorised gearbox positioning system | Python | coming |
+| 26 💻 | 23 Dec | DC motor speed control: PID, saturation and anti-windup | Python (python-control) | coming |
+| 27 💻 | 24 Dec | Lead–lag servo design and discretisation | Python (python-control) | coming |
+| 28 💻 | 25 Dec | Active suspension with LQR on a quarter-car | Python (python-control, SciPy) | coming |
+| 29 💻 | 26 Dec | Temperature control of a heated block | Python | coming |
+| 30 ⭐ | 27 Dec | Capstone: motorised gearbox positioning system | Python | coming |
 
 The builds connect: the Day 1 shaft returns on Day 7, the Day 5 gearbox on Days 24 and 30, and the Day 16 solver on Day 29.
 
