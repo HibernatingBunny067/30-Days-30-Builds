@@ -23,7 +23,7 @@ Daily posts on X: **[@harrykesh067](https://x.com/harrykesh067)**
 
 | Day | Date | Build | Tools | Status |
 |---|---|---|---|---|
-| 01 | 28 Nov | Gearbox output shaft: loads → fatigue sizing → parametric CAD | Python, Fusion | DONE ✅️ |
+| 01 | 28 Nov | Gearbox output shaft: loads → fatigue sizing → parametric CAD | Python, Fusion | DONE✅️ |
 | 02 | 29 Nov | Spur gear pair: Lewis bending and AGMA contact stress | Python, Fusion | coming |
 | 03 | 30 Nov | Bearing selection (L10 life) + housing | Python, Fusion | coming |
 | 04 | 01 Dec | Eccentrically loaded bolted bracket + GD&T drawing | Python, Fusion | coming |
