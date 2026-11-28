@@ -1,4 +1,5 @@
 # 30 Days, 30 Builds: Design, Simulation & Code
+![Series banner](media/banner.png)
 
 One mechanical engineering build a day for 30 days, from **28 Nov to 27 Dec 2026**, covering machine design, structural FEA, CFD, heat transfer, mechanisms and vibration, and control systems.
 
